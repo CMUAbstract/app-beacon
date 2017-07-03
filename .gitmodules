@@ -1,0 +1,9 @@
+[submodule "ext/maker"]
+	path = ext/maker
+	url = /afs/ece.cmu.edu/project/abstract/repos/maker
+[submodule "ext/libmsp"]
+	path = ext/libmsp
+	url = /afs/ece.cmu.edu/project/abstract/repos/libmsp
+[submodule "ext/libio"]
+	path = ext/libio
+	url = /afs/ece.cmu.edu/project/abstract/repos/libio

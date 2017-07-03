@@ -1,0 +1,35 @@
+EXEC = radio-app
+
+OBJECTS = \
+	main.o \
+
+DEPS += \
+	libio \
+	libmsp \
+
+export MAIN_CLOCK_FREQ = 8000000
+
+export CLOCK_FREQ_ACLK = 32768
+export CLOCK_FREQ_SMCLK = $(MAIN_CLOCK_FREQ)
+
+export LIBMSP_CLOCK_SOURCE = DCO
+export LIBMSP_DCO_FREQ = $(MAIN_CLOCK_FREQ)
+export LIBMSP_SLEEP_TIMER = B.0.0
+export LIBMSP_SLEEP_TIMER_CLK = ACLK
+export LIBMSP_SLEEP_TIMER_DIV = 8*1
+
+# To use add: libmspsoftuart to DEPS
+#export LIBIO_BACKEND = swuart
+#export LIBMSPSOFTUART_PIN_TX = 3.6
+#export LIBMSPSOFTUART_BAUDRATE = 9600
+#export LIBMSPSOFTUART_CLOCK_FREQ = $(MAIN_CLOCK_FREQ)
+#export LIBMSPSOFTUART_TIMER = B.0.5
+
+export LIBIO_BACKEND = hwuart
+export LIBMSP_UART_IDX = 1
+export LIBMSP_UART_PIN_TX = 3.4
+export LIBMSP_UART_BAUDRATE = 115200
+export LIBMSP_UART_CLOCK = SMCLK
+
+override VOLTAGE = 2400 # programming voltage in mV
+export VOLTAGE
