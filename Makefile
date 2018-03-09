@@ -1,5 +1,7 @@
-override BOARD = msp-exp430fr6989
+override BOARD = capybara
 export BOARD
+export BOARD_MAJOR = 2
+export BOARD_MINOR = 0
 
 TOOLCHAINS = \
 	gcc \
