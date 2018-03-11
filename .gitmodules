@@ -10,3 +10,6 @@
 [submodule "ext/libcapybara"]
 	path = ext/libcapybara
 	url = git@github.com:CMUAbstract/libcapybara
+[submodule "ext/libmspuartlink"]
+	path = ext/libmspuartlink
+	url = git@github.com:CMUAbstract/libmspuartlink

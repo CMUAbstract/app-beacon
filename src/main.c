@@ -8,18 +8,33 @@
 #include <libmsp/periph.h>
 #include <libmsp/uart.h>
 #include <libmsp/sleep.h>
+#include <libmsp/mem.h>
 #include <libio/console.h>
 #include <libcapybara/power.h>
 #include <libcapybara/capybara.h>
+#include <libmspuartlink/uartlink.h>
 
 #include "pins.h"
+
+#define BEACON_INTERVAL 8000 // ~2 seconds @ 32768/8 Hz
 
 #define RADIO_ON_CYCLES   60 // ~12ms (a bundle of 2-3 pkts 25 payload bytes each on Pin=0)
 #define RADIO_BOOT_CYCLES 60
 #define RADIO_RST_CYCLES   1
 
-#define MAX_PAYLOAD_LEN 25
-uint8_t pkt[1 + MAX_PAYLOAD_LEN];
+typedef enum __attribute__((packed)) {
+    RADIO_CMD_SET_ADV_PAYLOAD = 0,
+} radio_cmd_t;
+
+#define RADIO_PAYLOAD_LEN 4 /* chosen by the app */
+typedef struct __attribute__((packed)) {
+    radio_cmd_t cmd;
+    uint8_t payload[RADIO_PAYLOAD_LEN];
+} radio_pkt_t;
+
+static radio_pkt_t radio_pkt;
+
+static __nv uint8_t counter; // to generate dummy payload
 
 static inline void radio_pin_init()
 {
@@ -107,39 +122,38 @@ int main() {
 
     radio_pin_init();
 
-#if 0
-    msp_uart_open();
-
-    uint8_t len = 1;
-
     while (1) {
-        msp_sleep(16000);
 
-        if (len == MAX_PAYLOAD_LEN)
-            len = 1;
+        radio_pkt.cmd = RADIO_CMD_SET_ADV_PAYLOAD;
+        for (int j = 0; j < RADIO_PAYLOAD_LEN; ++j) {
+            radio_pkt.payload[j] = counter++;
+        }
 
-        pkt[0] = len;
-        for (int i = 1; i < len + 1; ++i)
-            pkt[i] = '0' + (i % 10);
+        LOG2("TX PKT (cmd %u len %u):\r\n", radio_pkt.cmd, RADIO_PAYLOAD_LEN);
+        int j;
+        for (j = 0; j < RADIO_PAYLOAD_LEN; j += 16) {
+            for (int c = 0; c < 16 && j + c < RADIO_PAYLOAD_LEN; ++c)
+                LOG2("%02i ", (int)radio_pkt.payload[j + c]);
+            LOG2("\r\n");
+        }
+        for (; j < RADIO_PAYLOAD_LEN % 16; ++j)
+            LOG2("%i ", (int)radio_pkt.payload[j]);
+        LOG2("\r\n");
 
-        msp_uart_send_sync(pkt, len + 1);
-
-        ++len;
-
-    }
-
-    msp_uart_close();
-#else
-    while (1) {
         radio_on();
-        msp_sleep(1000);
-        radio_off();
-        msp_sleep(8000);
-    }
-#endif
 
-    while(1) {
-        __bis_SR_register(LPM4_bits);
+        msp_sleep(RADIO_BOOT_CYCLES); // ~15ms @ ACLK/8
+
+        uartlink_open_tx();
+        uartlink_send((uint8_t *)&radio_pkt, sizeof(radio_pkt));
+        uartlink_close();
+
+        // TODO: wait until radio is finished; for now, wait blindly
+        msp_sleep(RADIO_ON_CYCLES);
+
+        radio_off();
+
+        msp_sleep(BEACON_INTERVAL);
     }
 }
 

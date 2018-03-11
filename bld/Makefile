@@ -7,6 +7,7 @@ DEPS += \
 	libio \
 	libmsp \
 	libcapybara \
+	libmspuartlink \
 
 export MAIN_CLOCK_FREQ = 8000000
 
@@ -37,6 +38,12 @@ export LIBMSP_UART_IDX = 0
 export LIBMSP_UART_PIN_TX = 2.0
 export LIBMSP_UART_BAUDRATE = 115200
 export LIBMSP_UART_CLOCK = SMCLK
+
+
+export LIBMSPUARTLINK_UART_IDX = 1
+export LIBMSPUARTLINK_PIN_TX = 2.5
+export LIBMSPUARTLINK_BAUDRATE = 115200
+export LIBMSPUARTLINK_CLK = SMCLK
 
 
 export LIBCAPYBARA_VBANK_COMP_REF = 1.2 # V
