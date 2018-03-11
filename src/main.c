@@ -9,6 +9,8 @@
 #include <libmsp/uart.h>
 #include <libmsp/sleep.h>
 #include <libio/console.h>
+#include <libcapybara/power.h>
+#include <libcapybara/capybara.h>
 
 #include "pins.h"
 
@@ -65,6 +67,10 @@ int main() {
 
     __enable_interrupt();
 
+    capybara_config_pins();
+    capybara_wait_for_supply();
+    capybara_shutdown_on_deep_discharge();
+
     msp_clock_setup();
 
     INIT_CONSOLE();
@@ -104,3 +110,39 @@ int main() {
         __bis_SR_register(LPM4_bits);
     }
 }
+
+#define _THIS_PORT 2
+__attribute__ ((interrupt(GPIO_VECTOR(_THIS_PORT))))
+void  GPIO_ISR(_THIS_PORT) (void)
+{
+    switch (__even_in_range(INTVEC(_THIS_PORT), INTVEC_RANGE(_THIS_PORT))) {
+#if BOARD_MAJOR == 1 && BOARD_MINOR == 0
+#if LIBCAPYBARA_PORT_VBOOST_OK == _THIS_PORT
+        case INTFLAG(LIBCAPYBARA_PORT_VBOOST_OK, LIBCAPYBARA_PIN_VBOOST_OK):
+            capybara_vboost_ok_isr();
+            break;
+#else
+#error Handler in wrong ISR: capybara_vboost_ok_isr
+#endif // LIBCAPYBARA_PORT_VBOOST_OK
+#endif // BOARD_{MAJOR,MINOR}
+    }
+}
+#undef _THIS_PORT
+
+#define _THIS_PORT 3
+__attribute__ ((interrupt(GPIO_VECTOR(_THIS_PORT))))
+void  GPIO_ISR(_THIS_PORT) (void)
+{
+    switch (__even_in_range(INTVEC(_THIS_PORT), INTVEC_RANGE(_THIS_PORT))) {
+#if (BOARD_MAJOR == 1 && BOARD_MINOR == 1) || (BOARD_MAJOR == 2 && BOARD_MINOR == 0)
+#if LIBCAPYBARA_PORT_VBOOST_OK == _THIS_PORT
+        case INTFLAG(LIBCAPYBARA_PORT_VBOOST_OK, LIBCAPYBARA_PIN_VBOOST_OK):
+            capybara_vboost_ok_isr();
+            break;
+#else
+#error Handler in wrong ISR: capybara_vboost_ok_isr
+#endif // LIBCAPYBARA_PORT_VBOOST_OK
+#endif // BOARD_{MAJOR,MINOR}
+    }
+}
+#undef _THIS_PORT
