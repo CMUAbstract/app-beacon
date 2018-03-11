@@ -21,6 +21,27 @@
 #define MAX_PAYLOAD_LEN 25
 uint8_t pkt[1 + MAX_PAYLOAD_LEN];
 
+static inline void radio_pin_init()
+{
+#if BOARD_MAJOR == 1 && BOARD_MINOR == 0
+    GPIO(PORT_SENSE_SW, OUT) &= ~BIT(PIN_SENSE_SW);
+    GPIO(PORT_SENSE_SW, DIR) |= BIT(PIN_SENSE_SW);
+
+    GPIO(PORT_RADIO_SW, OUT) &= ~BIT(PIN_RADIO_SW);
+    GPIO(PORT_RADIO_SW, DIR) |= BIT(PIN_RADIO_SW);
+#elif BOARD_MAJOR == 1 && BOARD_MINOR == 1
+
+    fxl_out(BIT_RADIO_SW | BIT_RADIO_RST);
+    fxl_pull_up(BIT_CCS_WAKE);
+    // SENSE_SW is present but is not electrically correct: do not use.
+#elif BOARD_MAJOR == 2 && BOARD_MINOR == 0
+    GPIO(PORT_RADIO_SW, OUT) &= ~BIT(PIN_RADIO_SW);
+    GPIO(PORT_RADIO_SW, DIR) |= BIT(PIN_RADIO_SW);
+#else // BOARD_{MAJOR,MINOR}
+#error Unsupported board: do not know what pins to configure (see BOARD var)
+#endif // BOARD_{MAJOR,MINOR}
+}
+
 static inline void radio_on()
 {
 #if (BOARD_MAJOR == 1 && BOARD_MINOR == 0) || (BOARD_MAJOR == 2 && BOARD_MINOR == 0)
@@ -75,6 +96,16 @@ int main() {
 
     INIT_CONSOLE();
     LOG("CAPYBARA v1.0\r\n");
+
+#if BOARD_MAJOR == 1 && BOARD_MINOR == 1
+    LOG2("i2c init\r\n");
+    i2c_setup();
+
+    LOG2("fxl init\r\n");
+    fxl_init();
+#endif // BOARD == v1.1
+
+    radio_pin_init();
 
 #if 0
     msp_uart_open();
