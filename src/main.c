@@ -132,8 +132,9 @@ int main() {
 #else
     while (1) {
         radio_on();
-        msp_sleep(16000);
+        msp_sleep(1000);
         radio_off();
+        msp_sleep(8000);
     }
 #endif
 
